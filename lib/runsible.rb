@@ -6,7 +6,7 @@ autoload :Slop, 'slop'
 # - this module is deliberately written without private state
 # - whenever a remote command sends data to STDOUT or STDERR, Runsible will
 #   immediately send it to the corresponding local IO
-# - Runsible itself writes some warnings and timestamped command delimeters to
+# - Runsible itself writes some warnings and timestamped command delimiters to
 #   STDOUT and STDERR
 #
 module Runsible
