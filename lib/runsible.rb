@@ -21,7 +21,13 @@ module Runsible
   SSH_CNX_TIMEOUT = 10
   class Error < RuntimeError; end
 
-  SETTINGS = [:user, :host, :port, :retries, :vars]
+  SETTINGS = {
+    user: ENV['USER'],
+    host: '127.0.0.1',
+    port: 22,
+    retries: 0,
+    vars: [],
+  }
 
   def self.version
     File.read(File.join(__dir__, '..', 'VERSION'))
@@ -34,8 +40,12 @@ module Runsible
     exit 1
   end
 
-  def self.run
+  def self.run(ssh_options = Hash.new)
     opts = Runsible.slop_parse
+    Runsible.spoon(opts, self.extract_yaml(opts), ssh_options)
+  end
+
+  def self.extract_yaml(opts)
     yaml_filename = opts.arguments.shift
     self.usage(opts, "yaml_file is required") if yaml_filename.nil?
 
@@ -44,36 +54,35 @@ module Runsible
     rescue RuntimeError => e
       Runsible.usage(opts, "could not load yaml_file\n#{e}")
     end
-
-    Runsible.spoon(opts, yaml)
+    yaml
   end
 
   def self.slop_parse
+    d = SETTINGS
     Slop.parse do |o|
       o.banner = "usage: runsible [options] yaml_file"
-      o.string '-u', '--user',    "remote user [#{ENV['USER']}]",
-               default: ENV['USER']
-      o.string '-H', '--host',  'remote host [127.0.0.1]', default: "127.0.0.1"
-      o.int    '-p', '--port',  'remote port [22]',        default: 22
-      o.int    '-r', '--retries', 'number of retry attempts [0]', default: 0
-      o.bool   '-s', '--silent',  'suppress alerts'
-      o.on     '-v', '--version', 'show Runsible version' do
-        puts Runsible.version
-        exit 0
-      end
       o.on '-h', '--help' do
         puts o
         exit 0
       end
+      o.on     '-v', '--version', 'show Runsible version' do
+        puts Runsible.version
+        exit 0
+      end
 
+      o.string '-u', '--user',    "remote user [#{d[:user]}]"
+      o.string '-H', '--host',    "remote host [#{d[:host]}]"
+      o.int    '-p', '--port',    "remote port [#{d[:port]}]"
+      o.int    '-r', '--retries', "retry count [#{d[:retries]}]"
+      o.bool   '-s', '--silent',  'suppress alerts'
       # this feature does not yet work as expected
       # https://github.com/net-ssh/net-ssh/issues/236
       #  o.string '-v', '--vars',    'list of vars to pass, e.g.: "FOO BAR"'
     end
   end
 
-  def self.merge(opts, settings = Hash.new)
-    Runsible::SETTINGS.each { |sym|
+  def self.merge(opts, settings)
+    Runsible::SETTINGS.keys.each { |sym|
       settings[sym.to_s] = opts[sym] if opts[sym]
     }
     settings['alerts'] = {} if opts.silent?
@@ -104,7 +113,7 @@ module Runsible
   end
 
   def self.spoon(opts, yaml, ssh_options = Hash.new)
-    settings = self.merge(opts, yaml['settings'] || Hash.new)
+    settings = self.merge(opts, yaml['settings'] || Runsible::SETTINGS.dup)
     self.ssh_runlist(settings, yaml['runlist'] || Array.new, ssh_options, yaml)
   end
 
