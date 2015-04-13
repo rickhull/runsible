@@ -22,8 +22,9 @@ Features
   - Retries
   - Alerts via email (soon: [kafka](http://kafka.apache.org),
     [rabbitmq](http://rabbitmq.com), [slack](http://slack.com))
-  - `continue` / `exit` / `cleanup` after command failure
-* Runs locally - no remote software or agents to manage
+  - `continue` / `exit` / `cleanup`
+* Runs locally - no additional remote software or agents to manage
+  - Remote machine must be running SSH service
 
 Installation
 ------------
