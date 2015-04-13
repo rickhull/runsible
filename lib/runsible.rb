@@ -3,13 +3,6 @@ require 'slop'
 require 'pony'
 require 'net/ssh'
 
-# for nonzero exit status of a remote command
-class CommandFailure < RuntimeError
-  def to_s(*args)
-    "#{self.class}: #{super(*args)}"
-  end
-end
-
 # - this module is deliberately written without private state
 # - it is meant to be used in the helper style
 # - whenever a remote command sends data to STDOUT or STDERR, Runsible will
@@ -18,7 +11,15 @@ end
 #   STDOUT and STDERR
 #
 module Runsible
-  class Error < RuntimeError; end
+  class Error < RuntimeError
+    def to_s(*args)
+      "#{self.class}: #{super(*args)}"
+    end
+  end
+
+  # for nonzero exit status of a remote command
+  class CommandFailure < Runsible::Error; end
+
   SSH_CNX_TIMEOUT = 10
 
   SETTINGS = {
