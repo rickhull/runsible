@@ -13,7 +13,7 @@ settings:
     address: rabbit://mq/things
   alerts:
     backend: slack
-    address: slack://slack.glassdoor.com/&soforth
+    address: slack://foo.slack.com/#bar
   alerts:
     backend: disabled
   alerts:
