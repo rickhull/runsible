@@ -49,7 +49,6 @@ defaults to attempt to SSH to `127.0.0.1:22` as the current user.
 ```
 settings:
   user: root
-  retries: 0
   alerts:
     backend: email
     address: alerts@bigco.com
