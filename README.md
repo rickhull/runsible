@@ -16,7 +16,7 @@ for `runsible` can override the YAML settings.
 Features
 --------
 * Use SSH for remote transport and execution
-* Use your local ssh_config, keys, agent, etc.
+  - Use your local ssh_config, keys, agent, etc.
 * Declare runlists and settings in YAML format
 * Robust failure handling including:
   - Retries
