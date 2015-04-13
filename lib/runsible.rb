@@ -26,14 +26,17 @@ module Runsible
     exit 1
   end
 
-  def self.alert(to, subject, body, backend=:email)
+  def self.alert(topic, message, settings)
+    backend = settings['alerts'] && settings['alerts']['backend']
     case backend
-    when :email
-      Pony.mail(to: to,
+    when 'disabled', nil, false
+      return
+    when 'email'
+      Pony.mail(to: settings.fetch(:address),
                 from: 'runsible@spoon',
-                subject: subject,
-                body: body)
-    when :kafka
+                subject: topic,
+                body: message)
+    when 'kafka', 'slack'
       # TODO
       raise Error, "unsupported backend: #{backend.inspect}"
     else
@@ -57,9 +60,9 @@ module Runsible
     }
   end
 
-  def self.die!(msg, alert_to)
+  def self.die!(msg, settings)
     self.warn(msg)
-    self.alert(alert_to, "Runsible: FATAL #{msg}", msg)
+    self.alert("runsible:fatal:#{Process.pid}", msg, settings)
     exit 1
   end
 
@@ -92,7 +95,7 @@ module Runsible
             self.warn "#{on_failure} unknown"
           end
         end
-        self.die!("exiting after `#{cmd}` ultimately failed")
+        self.die!("exiting after `#{cmd}` ultimately failed", settings)
       end
     }
   end
