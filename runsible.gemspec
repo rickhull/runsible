@@ -21,6 +21,4 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'pony', '~> 1.0'
 
   s.add_development_dependency 'buildar', '~> 2.0'
-
-  s.has_rdoc = false
 end

@@ -26,10 +26,12 @@ module Runsible
   # Utility stuff
   #
 
+  # provide a better string representation for all Exceptions
   def self.excp(excp)
     "#{excp.class}: #{excp.message}"
   end
 
+  # return SETTINGS with string keys
   def self.default_settings
     hsh = {}
     SETTINGS.each { |sym, v|
@@ -38,10 +40,12 @@ module Runsible
     hsh
   end
 
+  # read VERSION from filesystem
   def self.version
     File.read(File.join(__dir__, '..', 'VERSION'))
   end
 
+  # send alert depending on settings['alerts']['backend']
   def self.alert(topic, message, settings)
     backend = settings['alerts'] && settings['alerts']['backend']
     case backend
@@ -60,11 +64,13 @@ module Runsible
     end
   end
 
+  # send warnings to both STDOUT and STDERR
   def self.warn(msg)
     $stdout.puts msg
     $stderr.puts msg
   end
 
+  # warn, alert, exit 1
   def self.die!(msg, settings)
     self.warn(msg)
     self.alert("runsible:fatal:#{Process.pid}", msg, settings)
@@ -85,6 +91,7 @@ module Runsible
     self.ssh_runlist(settings, yaml['runlist'] || Array.new, ssh_options, yaml)
   end
 
+  # parse CLI arguments
   def self.slop_parse
     d = SETTINGS # display defaults
     Slop.parse do |o|
@@ -109,6 +116,7 @@ module Runsible
     end
   end
 
+  # load yaml from CLI arguments
   def self.extract_yaml(opts)
     yaml_filename = opts.arguments.shift
     self.usage(opts, "yaml_file is required") if yaml_filename.nil?
@@ -121,6 +129,7 @@ module Runsible
     yaml
   end
 
+  # provide a friendly message for the user
   def self.usage(opts, msg=nil)
     puts opts
     puts
@@ -234,6 +243,8 @@ module Runsible
   # Necessities
   #
 
+  # opts has symbol keys, overrides settings (string keys)
+  # return a hash with string keys
   def self.merge(opts, settings)
     Runsible::SETTINGS.keys.each { |sym|
       settings[sym.to_s] = opts[sym] if opts[sym]
@@ -242,18 +253,22 @@ module Runsible
     settings
   end
 
+  # delimits the beginning of command output
   def self.begin_banner(msg)
     "RUNSIBLE >>> [#{self.timestamp}] >>> #{msg} >>>>>"
   end
 
+  # delimits the end of command output
   def self.end_banner(msg)
     "<<<<< #{msg} <<< [#{self.timestamp}] <<< RUNSIBLE"
   end
 
+  # self-explanatory
   def self.timestamp(t = Time.now)
     t.strftime("%b%d %H:%M:%S")
   end
 
+  # display begin/end banners, yielding to the block in between
   def self.banner_wrap(msg)
     self.warn self.begin_banner(msg)
     val = block_given? ? yield : true
