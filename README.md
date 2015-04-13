@@ -114,7 +114,7 @@ Commands
   after a short delay
 * When retries are exhausted, an alert goes out, and `on_failure` determines
   the flow of execution
-* `on_failure: exit` is the default, aborting the runlist and causing
-  `runsible` to exit with non-zero status code.
-* `on_failure: continue` is a common option.
-* `on_failure: cleanup` can be used with another runlist keyed under `cleanup`
+  - `exit` is the default, aborting the runlist and causing `runsible` to exit
+     with non-zero status code.
+  - `continue` is a common option.
+  - `cleanup` can be used with another runlist keyed by `cleanup`
