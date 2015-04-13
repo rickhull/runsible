@@ -6,9 +6,10 @@ handling failures with retries and alerting.  It captures remote STDOUT and
 STDERR and outputs them locally.  Commands are executed sequentially in a
 "runlist".
 
-An executable `runsible` is provided, which looks for a YAML file in the
-command line arguments. The YAML file defines the runlist and settings, while
-the command line options for `runsible` can override the YAML settings.
+An executable `runsible` is provided, which looks for a
+[YAML](http://en.wikipedia.org/wiki/YAML) file in the command line arguments.
+The YAML file defines the runlist and settings, while the command line options
+for `runsible` can override the YAML settings.
 
 Features
 --------
