@@ -1,0 +1,11 @@
+settings:
+  silent: yes
+
+runlist:
+  - command: false
+    retries: 3
+    on_failure: continue
+  - command: true
+  - command: false
+    retries: 3
+  - command: true
