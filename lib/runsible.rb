@@ -49,6 +49,7 @@ module Runsible
     backend = settings['alerts'] && settings['alerts']['backend']
     case backend
     when 'disabled', nil, false
+      self.warn "DISABLED ALERT: [#{topic}] #{message}"
       return
     when 'email'
       Pony.mail(to: settings.fetch(:address),
