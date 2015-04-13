@@ -135,6 +135,13 @@ module Runsible
   # Library stuff
   #
 
+  # run a YAML file without any consideration for command line options
+  def self.run_yaml(yaml_filename, ssh_options = Hash.new)
+    yaml = YAML.load_file(yaml_filename)
+    self.ssh_runlist(self.default_settings, yaml['runlist'] || Array.new,
+                     ssh_options, yaml)
+  end
+
   # initiate ssh connection, perform the runlist
   def self.ssh_runlist(settings, runlist, ssh_options, yaml)
     ssh_options[:forward_agent] ||= true
