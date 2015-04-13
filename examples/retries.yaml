@@ -1,6 +1,3 @@
-settings:
-  silent: yes
-
 runlist:
   - command: false
     retries: 3
