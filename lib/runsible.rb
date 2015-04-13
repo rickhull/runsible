@@ -1,7 +1,7 @@
 require 'yaml'
-require 'slop'
-require 'pony'
-require 'net/ssh'
+autoload :Net, 'net/ssh'
+autoload :Pony, 'pony'
+autoload :Slop, 'slop'
 
 # - this module is deliberately written without private state
 # - it is meant to be used in the helper style
@@ -11,16 +11,8 @@ require 'net/ssh'
 #   STDOUT and STDERR
 #
 module Runsible
-  class Error < RuntimeError
-    def to_s(*args)
-      "#{self.class}: #{super(*args)}"
-    end
-  end
-
-  # for nonzero exit status of a remote command
-  class CommandFailure < Runsible::Error; end
-
-  SSH_CNX_TIMEOUT = 10
+  class Error < RuntimeError; end
+  class CommandFailure < Runsible::Error; end # nonzero exit
 
   SETTINGS = {
     user: ENV['USER'],
@@ -29,10 +21,15 @@ module Runsible
     retries: 0,
     vars: [],
   }
+  SSH_CNX_TIMEOUT = 10
 
   #
   # Utility stuff
   #
+
+  def self.excp(excp)
+    "#{excp.class}: #{excp.message}"
+  end
 
   def self.default_settings
     hsh = {}
@@ -120,7 +117,7 @@ module Runsible
     begin
       yaml = YAML.load_file(yaml_filename)
     rescue RuntimeError => e
-      Runsible.usage(opts, "could not load yaml_file\n#{e}")
+      Runsible.usage(opts, "could not load yaml_file\n#{self.excp(e)}")
     end
     yaml
   end
@@ -165,10 +162,11 @@ module Runsible
       begin
         self.exec_retry(ssh, cmd, retries)
       rescue CommandFailure, Net::SSH::Exception => e
-        self.warn e
+        excp = self.excp(e)
+        self.warn excp
         msg = "#{retries} retries exhausted; on_failure: #{on_failure}"
         self.warn msg
-        self.alert(settings['email'], "retries exhausted", e.to_s)
+        self.alert(settings['email'], "retries exhausted", excp)
 
         case on_failure
         when 'continue'
@@ -228,7 +226,8 @@ module Runsible
       end
     end
     ssh.loop # nothing actually executes until this call
-    exit_code == 0 or raise(CommandFailure, "[exit #{exit_code}] #{cmd}")
+    raise(CommandFailure, "[exit #{exit_code}] #{cmd}") unless exit_code == 0
+    true
   end
 
 
@@ -258,7 +257,8 @@ module Runsible
 
   def self.banner_wrap(msg)
     self.warn self.begin_banner(msg)
-    yield if block_given?
+    val = block_given? ? yield : true
     self.warn self.end_banner(msg)
+    val
   end
 end
