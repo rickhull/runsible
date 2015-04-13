@@ -19,11 +19,21 @@ module Runsible
   SSH_CNX_TIMEOUT = 10
   class Error < RuntimeError; end
 
+  SETTINGS = [:user, :host, :port, :retries, :vars]
+
   def self.usage(opts, msg=nil)
     puts opts
     puts
     puts msg if msg
     exit 1
+  end
+
+  def self.merge(opts, settings = Hash.new)
+    Runsible::SETTINGS.each { |sym|
+      settings[sym.to_s] = opts[sym] if opts[sym]
+    }
+    settings['alerts'] = {} if opts.silent?
+    settings
   end
 
   def self.alert(topic, message, settings)
@@ -47,6 +57,11 @@ module Runsible
   def self.warn(msg)
     $stdout.puts msg
     $stderr.puts msg
+  end
+
+  def self.spoon(opts, yaml, ssh_options = Hash.new)
+    settings = self.merge(opts, yaml['settings'] || Hash.new)
+    self.ssh_runlist(settings, yaml['runlist'] || Array.new, ssh_options, yaml)
   end
 
   def self.ssh_runlist(settings, runlist, ssh_options, yaml)
