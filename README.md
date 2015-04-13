@@ -17,6 +17,7 @@ Features
   - Retries
   - Alerts via email (soon: kafka, rabbitmq, slack)
   - continue / exit / cleanup after command failure
+* Use your local ssh_config, keys, agent, etc.
 
 Installation
 ------------
