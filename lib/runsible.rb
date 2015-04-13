@@ -1,3 +1,5 @@
+require 'yaml'
+require 'slop'
 require 'pony'
 require 'net/ssh'
 
@@ -26,6 +28,35 @@ module Runsible
     puts
     puts msg if msg
     exit 1
+  end
+
+  def self.run
+    opts = Runsible.slop_parse
+    yaml_filename = opts.arguments.shift
+    self.usage(opts, "yaml_file is required") if yaml_filename.nil?
+
+    begin
+      yaml = YAML.load_file(yaml_filename)
+    rescue RuntimeError => e
+      Runsible.usage(opts, "could not load yaml_file\n#{e}")
+    end
+
+    Runsible.spoon(opts, yaml)
+  end
+
+  def self.slop_parse
+    Slop.parse do |o|
+      o.banner = "usage: runcible.rb [options] yaml_file"
+      o.string '-u', '--user',    "remote user [#{ENV['USER']}]]",
+               default: ENV['USER']
+      o.string '-H', '--host',  'remote host [127.0.0.1]', default: "127.0.0.1"
+      o.int    '-p', '--port',  'remote port [22]',        default: 22
+      o.int    '-r', '--retries', 'number of retry attempts [0]', default: 0
+      o.bool   '-s', '--silent',  'suppress alerts'
+      # this feature does not yet work as expected
+      # https://github.com/net-ssh/net-ssh/issues/236
+      #  o.string '-v', '--vars',    'list of vars to pass, e.g.: "FOO BAR"'
+    end
   end
 
   def self.merge(opts, settings = Hash.new)
