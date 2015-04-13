@@ -20,8 +20,10 @@ Features
 * Declare runlists and settings in YAML format
 * Robust failure handling including:
   - Retries
-  - Alerts via email (soon: [kafka](http://kafka.apache.org),
-    [rabbitmq](http://rabbitmq.com), [slack](http://slack.com))
+  - Alerts via [email](https://github.com/benprew/pony)
+    (soon: [kafka](http://kafka.apache.org),
+           [rabbitmq](http://rabbitmq.com),
+           [slack](http://slack.com))
   - `continue` / `exit` / `cleanup`
 * Runs locally - no additional software or agents to manage on the command
   target
