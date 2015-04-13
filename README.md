@@ -39,6 +39,23 @@ Or, if using [Bundler](http://bundler.io/), add to your Gemfile:
 gem 'runsible', '~> 0.1'
 ```
 
+Usage
+-----
+
+`runsible /path/to/file.yaml`
+
+```
+$ runsible -h
+usage: runsible [options] yaml_file
+    -h, --help
+    -v, --version  show runsible version
+    -u, --user     remote user [rwh]
+    -H, --host     remote host [127.0.0.1]
+    -p, --port     remote port [22]
+    -r, --retries  retry count [0]
+    -s, --silent   suppress alerts
+```
+
 YAML Configuration
 ------------------
 The top-level YAML structure is a hash.  Primary keys are 'settings' and
