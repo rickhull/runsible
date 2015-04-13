@@ -23,6 +23,10 @@ module Runsible
 
   SETTINGS = [:user, :host, :port, :retries, :vars]
 
+  def self.version
+    File.read(File.join(__dir__, '..', 'VERSION'))
+  end
+
   def self.usage(opts, msg=nil)
     puts opts
     puts
@@ -46,13 +50,22 @@ module Runsible
 
   def self.slop_parse
     Slop.parse do |o|
-      o.banner = "usage: runcible.rb [options] yaml_file"
-      o.string '-u', '--user',    "remote user [#{ENV['USER']}]]",
+      o.banner = "usage: runsible [options] yaml_file"
+      o.string '-u', '--user',    "remote user [#{ENV['USER']}]",
                default: ENV['USER']
       o.string '-H', '--host',  'remote host [127.0.0.1]', default: "127.0.0.1"
       o.int    '-p', '--port',  'remote port [22]',        default: 22
       o.int    '-r', '--retries', 'number of retry attempts [0]', default: 0
       o.bool   '-s', '--silent',  'suppress alerts'
+      o.on     '-v', '--version', 'show Runsible version' do
+        puts Runsible.version
+        exit 0
+      end
+      o.on '-h', '--help' do
+        puts o
+        exit 0
+      end
+
       # this feature does not yet work as expected
       # https://github.com/net-ssh/net-ssh/issues/236
       #  o.string '-v', '--vars',    'list of vars to pass, e.g.: "FOO BAR"'
