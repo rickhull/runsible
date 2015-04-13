@@ -103,7 +103,7 @@ module Runsible
         puts o
         exit 0
       end
-      o.on     '-v', '--version', 'show Runsible version' do
+      o.on     '-v', '--version', 'show runsible version' do
         puts Runsible.version
         exit 0
       end
