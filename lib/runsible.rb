@@ -29,6 +29,14 @@ module Runsible
     vars: [],
   }
 
+  def self.default_settings
+    hsh = {}
+    SETTINGS.each { |sym, v|
+      hsh[sym.to_s] = v
+    }
+    hsh
+  end
+
   def self.version
     File.read(File.join(__dir__, '..', 'VERSION'))
   end
@@ -113,7 +121,8 @@ module Runsible
   end
 
   def self.spoon(opts, yaml, ssh_options = Hash.new)
-    settings = self.merge(opts, yaml['settings'] || Runsible::SETTINGS.dup)
+    settings = Runsible.default_settings.merge(yaml['settings'] || Hash.new)
+    settings = self.merge(opts, settings)
     self.ssh_runlist(settings, yaml['runlist'] || Array.new, ssh_options, yaml)
   end
 
