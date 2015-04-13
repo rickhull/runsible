@@ -1,10 +1,9 @@
-require 'yaml'
+autoload :YAML, 'yaml'
 autoload :Net, 'net/ssh'
 autoload :Pony, 'pony'
 autoload :Slop, 'slop'
 
 # - this module is deliberately written without private state
-# - it is meant to be used in the helper style
 # - whenever a remote command sends data to STDOUT or STDERR, Runsible will
 #   immediately send it to the corresponding local IO
 # - Runsible itself writes some warnings and timestamped command delimeters to
