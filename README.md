@@ -4,37 +4,39 @@ Runsible uses SSH to execute remote commands, handling failures with retries
 and alerting.  It captures remote STDOUT and STDERR and outputs them locally.
 Commands are executed sequentially in a "runlist".
 
-An executable `runsible` is provided, which parses a YAML file which is
-provided as a command line argument.  The YAML file defines the runlist and
-settings, while the command line options for `runsible` can override the
-YAML settings.
+An executable `runsible` is provided, which looks for a YAML file in the
+command line arguments. The YAML file defines the runlist and settings, while
+the command line options for `runsible` can override the YAML settings.
 
 Features
 --------
 * Use SSH for remote transport and execution
+* Use your local ssh_config, keys, agent, etc.
 * Declare runlists and settings in YAML format
 * Robust failure handling including:
   - Retries
   - Alerts via email (soon: kafka, rabbitmq, slack)
   - continue / exit / cleanup after command failure
-* Use your local ssh_config, keys, agent, etc.
+* Runs locally - no remote software or agents to manage
 
 Installation
 ------------
 Install the gem:
+
 ```
 $ gem install runsible       # sudo as necessary
 ```
 Or, if using [Bundler](http://bundler.io/), add to your Gemfile:
+
 ```ruby
 gem 'runsible', '~> 0.1'
 ```
 
 YAML Configuration
 ------------------
-Top-level yaml structure is a hash.  Primary keys are 'settings' and 'runlist',
-though neither are necessary.  Optionally you can define a 'cleanup' section,
-and point to it with `on_failure: cleanup` in your runlist.
+The top-level YAML structure is a hash.  Primary keys are 'settings' and
+'runlist', though neither are necessary.  Optionally you can define a
+'cleanup' section and point to it with `on_failure: cleanup` in a runlist item.
 
 The minimal YAML file is empty.  `runsible empty.yaml` will use internal
 defaults to attempt to SSH to `127.0.0.1:22` as the current user.
@@ -54,6 +56,8 @@ settings:
 ```
 
 All of the above is optional.
+Note that `vars` is not behaving as expected and is unsupported at the moment.
+See https://github.com/net-ssh/net-ssh/issues/236 for details.
 
 *Maximal Runlist Example*
 ```
@@ -68,8 +72,9 @@ runlist:
   - command: true
 ```
 
-The last `- command: true` will never execute.  The previous `false` with 2
-retries will exit, since it doesn't have `on_failure: continue`.
+Note that the last `- command: true` runlist item will never execute.  The
+previous `- command: false` with 2 retries will exit, since it doesn't have
+`on_failure: continue`, and the default value is `exit`.
 
 *Empty Runlist*
 
