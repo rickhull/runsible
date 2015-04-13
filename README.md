@@ -6,7 +6,7 @@ Commands are executed sequentially in a "runlist".
 
 An executable `runsible` is provided, which parses a YAML file which is
 provided as a command line argument.  The YAML file defines the runlist and
-settings, while the command line options for `runcible` can override the
+settings, while the command line options for `runsible` can override the
 YAML settings.
 
 Features
