@@ -1,7 +1,7 @@
 Runsible
 ========
 Runsible uses [SSH](http://en.wikipedia.org/wiki/SSH)
-(via [net/ssh](https://github.com/net-ssh/net-ssh)) to execute remote commands,
+(via [net-ssh](https://github.com/net-ssh/net-ssh)) to execute remote commands,
 handling failures with retries and alerting.  It captures remote STDOUT and
 STDERR and outputs them locally.  Commands are executed sequentially in a
 "runlist".
