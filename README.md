@@ -23,8 +23,9 @@ Features
   - Alerts via email (soon: [kafka](http://kafka.apache.org),
     [rabbitmq](http://rabbitmq.com), [slack](http://slack.com))
   - `continue` / `exit` / `cleanup`
-* Runs locally - no additional remote software or agents to manage
-  - Remote machine must be running SSH service
+* Runs locally - no additional software or agents to manage on the command
+  target
+  - Command target must be running SSH service
 
 Installation
 ------------
