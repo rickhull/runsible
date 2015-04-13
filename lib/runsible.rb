@@ -13,6 +13,7 @@ module Runsible
   class Error < RuntimeError; end
   class CommandFailure < Runsible::Error; end # nonzero exit
 
+  # defaults
   SETTINGS = {
     user: ENV['USER'],
     host: '127.0.0.1',
@@ -22,20 +23,18 @@ module Runsible
   }
   SSH_CNX_TIMEOUT = 10
 
-  #
-  # Utility stuff
-  #
+  ### Utility stuff ###
 
   # provide a better string representation for all Exceptions
   def self.excp(excp)
     "#{excp.class}: #{excp.message}"
   end
 
-  # return SETTINGS with string keys
-  def self.default_settings
-    hsh = {}
+  # return SETTINGS with string keys, using values from hsh if passed in
+  def self.apply_defaults(hsh = nil)
+    hsh ||= Hash.new
     SETTINGS.each { |sym, v|
-      hsh[sym.to_s] = v
+      hsh[sym.to_s] ||= v
     }
     hsh
   end
@@ -45,7 +44,7 @@ module Runsible
     File.read(File.join(__dir__, '..', 'VERSION'))
   end
 
-  # send alert depending on settings['alerts']['backend']
+  # send alert depending on settings
   def self.alert(topic, message, settings)
     backend = settings['alerts'] && settings['alerts']['backend']
     case backend
@@ -77,19 +76,7 @@ module Runsible
     exit 1
   end
 
-
-  #
-  # CLI or bin/runsible stuff
-  #
-
-  # bin/runsible entry point
-  def self.spoon(ssh_options = Hash.new)
-    opts = Runsible.slop_parse
-    yaml = self.extract_yaml(opts)
-    settings = Runsible.default_settings.merge(yaml['settings'] || Hash.new)
-    settings = self.merge(opts, settings)
-    self.ssh_runlist(settings, yaml['runlist'] || Array.new, ssh_options, yaml)
-  end
+  ### CLI or bin/runsible stuff ###
 
   # parse CLI arguments
   def self.slop_parse
@@ -137,15 +124,21 @@ module Runsible
     exit 1
   end
 
-  #
-  # Library stuff
-  #
+  # bin/runsible entry point
+  def self.spoon(ssh_options = Hash.new)
+    opts = Runsible.slop_parse
+    yaml = self.extract_yaml(opts)
+    settings = self.merge(opts, Runsible.apply_defaults(yaml['settings']))
+    self.ssh_runlist(settings, yaml['runlist'], ssh_options, yaml)
+  end
+
+  ### Library stuff ###
 
   # run a YAML file without any consideration for command line options
   def self.run_yaml(yaml_filename, ssh_options = Hash.new)
     yaml = YAML.load_file(yaml_filename)
-    self.ssh_runlist(self.default_settings, yaml['runlist'] || Array.new,
-                     ssh_options, yaml)
+    settings = self.apply_defaults(yaml['settings'])
+    self.ssh_runlist(settings, yaml['runlist'], ssh_options, yaml)
   end
 
   # initiate ssh connection, perform the runlist
@@ -161,8 +154,9 @@ module Runsible
   end
 
   # execute runlist with failure handling, retries, alerting, etc.
+  # runlist can be nil
   def self.exec_runlist(ssh, runlist, settings, yaml = Hash.new)
-    runlist.each { |run|
+    (runlist || Array.new).each { |run|
       cmd = run.fetch('command')
       retries = run['retries'] || settings['retries']
       on_failure = run['on_failure'] || 'exit'
@@ -238,10 +232,7 @@ module Runsible
     true
   end
 
-
-  #
-  # Necessities
-  #
+  ### Necessities ###
 
   # opts has symbol keys, overrides settings (string keys)
   # return a hash with string keys
