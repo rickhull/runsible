@@ -45,6 +45,26 @@ The top-level YAML structure is a hash.  Primary keys are 'settings' and
 The minimal YAML file is empty.  `runsible empty.yaml` will use internal
 defaults to attempt to SSH to `127.0.0.1:22` as the current user.
 
+*Real-world Example*
+```
+settings:
+  user: root
+  retries: 0
+  alerts:
+    backend: email
+    address: alerts@bigco.com
+
+runlist:
+  - command: ./setup_fs
+  - command: source anaconda/bin/activate graphlab
+  - command: python scorer.py
+    retries: 5
+    on_failure: cleanup
+
+cleanup:
+  - command: python wipe_cache.py
+```
+
 *Maximal Settings Example*
 ```
 settings:
@@ -85,25 +105,6 @@ previous `- command: false` with 2 retries will exit, since it doesn't have
 The ssh connection will still be attempted according to defaults and any
 settings provided.  The connection will be closed immediately.
 
-*Real-world Example*
-```
-settings:
-  user: root
-  retries: 0
-  alerts:
-    backend: email
-    address: alerts@bigco.com
-
-runlist:
-  - command: ./setup_fs
-  - command: source anaconda/bin/activate graphlab
-  - command: python scorer.py
-    retries: 5
-    on_failure: cleanup
-
-cleanup:
-  - command: python wipe_cache.py
-```
 
 Commands
 --------
