@@ -70,7 +70,6 @@ runlist:
 
 The last `- command: true` will never execute.  The previous `false` with 2
 retries will exit, since it doesn't have `on_failure: continue`.
-```
 
 *Empty Runlist*
 
