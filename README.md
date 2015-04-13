@@ -51,7 +51,7 @@ settings:
   user: root
   alerts:
     backend: email
-    address: alerts@bigco.com
+    address: alerts@bigco.local
 
 runlist:
   - command: ./setup_fs
@@ -71,9 +71,9 @@ settings:
   retries: 5
   alerts:
     backend: email
-    address: foo@bar
+    address: alerts@bigco.local
   user: root
-  host: runsible.com
+  host: bigco.local
   port: 80
   vars: FOO BAR BAZ
 ```
@@ -82,22 +82,20 @@ All of the above is optional.
 Note that `vars` is not behaving as expected and is unsupported at the moment.
 See https://github.com/net-ssh/net-ssh/issues/236 for details.
 
-*Maximal Runlist Example*
+*Simple Runlist Example*
 ```
 runlist:
   - command: false
     retries: 3
     on_failure: continue
   - command: true
-    on_failure: exit
   - command: false
-    retries: 2
   - command: true
 ```
 
 Note that the last `- command: true` runlist item will never execute.  The
-previous `- command: false` with 2 retries will exit, since it doesn't have
-`on_failure: continue`, and the default value is `exit`.
+previous `- command: false` will exit, since it doesn't have
+`on_failure: continue` and the default value is `exit`.
 
 *Empty Runlist*
 
@@ -108,12 +106,15 @@ settings provided.  The connection will be closed immediately.
 Commands
 --------
 
-Commands are executed sectionally within a runlist.  They are executed
-within the context of a remote shell provided by SSH.  Shell exit code is
-used to determine success or failure.  On a successful command, execution
-proceeds to the next command in the runlist.  On failure, if there are retries
-configured for the command, it will be retried after a short delay.  If the
-last try fails, then an alert goes out, and the `on_failure` configuration
-determines the flow of execution.  `on_failure: exit` is the default,
-aborting the runlist and causing `runsible` to exit with non-zero status code.
-`on_failure: continue` is another common option.
+* Commands are executed in the context of a remote shell provided by SSH
+* Commands are executed sequentially within a runlist
+* Shell exit code determines command success or failure
+* On success, execution proceeds to the next command in the runlist
+* On failure, if there are retries configured, the command will be retried
+  after a short delay
+* When retries are exhausted, an alert goes out, and `on_failure` determines
+  the flow of execution
+* `on_failure: exit` is the default, aborting the runlist and causing
+  `runsible` to exit with non-zero status code.
+* `on_failure: continue` is a common option.
+* `on_failure: cleanup` can be used with another runlist keyed under `cleanup`
