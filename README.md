@@ -125,6 +125,7 @@ previous `- command: false` will exit, since it doesn't have
 The SSH connection will still be attempted according to defaults and any
 settings provided.  The connection will be closed immediately.
 
+See also [the built-in examples](https://github.com/rickhull/runsible/tree/master/examples).
 
 Commands
 --------
