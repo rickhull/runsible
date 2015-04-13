@@ -1,8 +1,10 @@
 Runsible
 ========
-Runsible uses SSH to execute remote commands, handling failures with retries
-and alerting.  It captures remote STDOUT and STDERR and outputs them locally.
-Commands are executed sequentially in a "runlist".
+Runsible uses [SSH](http://en.wikipedia.org/wiki/SSH)
+(via [net/ssh](https://github.com/net-ssh/net-ssh)) to execute remote commands,
+handling failures with retries and alerting.  It captures remote STDOUT and
+STDERR and outputs them locally.  Commands are executed sequentially in a
+"runlist".
 
 An executable `runsible` is provided, which looks for a YAML file in the
 command line arguments. The YAML file defines the runlist and settings, while
@@ -15,8 +17,9 @@ Features
 * Declare runlists and settings in YAML format
 * Robust failure handling including:
   - Retries
-  - Alerts via email (soon: kafka, rabbitmq, slack)
-  - continue / exit / cleanup after command failure
+  - Alerts via email (soon: [kafka](http://kafka.apache.org),
+    [rabbitmq](http://rabbitmq.com), [slack](http://slack.com))
+  - `continue` / `exit` / `cleanup` after command failure
 * Runs locally - no remote software or agents to manage
 
 Installation
