@@ -1,5 +1,5 @@
 Gem::Specification.new do |s|
-  s.name = 'Runsible'
+  s.name = 'runsible'
   s.required_ruby_version = "~> 2"
   s.version = File.read(File.join(__dir__, 'VERSION'))
   s.summary = 'Run remote tasks sanely via SSH with failure handling'
