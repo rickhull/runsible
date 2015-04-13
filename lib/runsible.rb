@@ -45,13 +45,6 @@ module Runsible
     File.read(File.join(__dir__, '..', 'VERSION'))
   end
 
-  def self.usage(opts, msg=nil)
-    puts opts
-    puts
-    puts msg if msg
-    exit 1
-  end
-
   def self.alert(topic, message, settings)
     backend = settings['alerts'] && settings['alerts']['backend']
     case backend
@@ -129,6 +122,13 @@ module Runsible
       Runsible.usage(opts, "could not load yaml_file\n#{e}")
     end
     yaml
+  end
+
+  def self.usage(opts, msg=nil)
+    puts opts
+    puts
+    puts msg if msg
+    exit 1
   end
 
   #
