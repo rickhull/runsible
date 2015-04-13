@@ -85,6 +85,26 @@ previous `- command: false` with 2 retries will exit, since it doesn't have
 The ssh connection will still be attempted according to defaults and any
 settings provided.  The connection will be closed immediately.
 
+*Real-world Example*
+```
+settings:
+  user: root
+  retries: 0
+  alerts:
+    backend: email
+    address: alerts@bigco.com
+
+runlist:
+  - command: ./setup_fs
+  - command: source anaconda/bin/activate graphlab
+  - command: python scorer.py
+    retries: 5
+    on_failure: cleanup
+
+cleanup:
+  - command: python wipe_cache.py
+```
+
 Commands
 --------
 
