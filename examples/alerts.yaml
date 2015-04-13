@@ -1,0 +1,19 @@
+# note, you should only have one alerts key in a real settings hash
+# this is just a silly example, last write wins, alerts should be empty
+
+settings:
+  alerts:
+    backend: email
+    address: jobsteam@gmail.com
+  alerts:
+    backend: kafka
+    address: kafka://stuff/here
+  alerts:
+    backend: rabbitmq
+    address: rabbit://mq/things
+  alerts:
+    backend: slack
+    address: slack://slack.glassdoor.com/&soforth
+  alerts:
+    backend: disabled
+  alerts:
