@@ -252,12 +252,12 @@ module Runsible
 
   # delimits the beginning of command output
   def self.begin_banner(msg)
-    "RUNSIBLE >>> [#{self.timestamp}] >>> #{msg} >>>>>"
+    ">>> RUNSIBLE [#{self.timestamp}] #{msg} >>>"
   end
 
   # delimits the end of command output
   def self.end_banner(msg)
-    "<<<<< #{msg} <<< [#{self.timestamp}] <<< RUNSIBLE"
+    "<<< RUNSIBLE [#{self.timestamp}] #{msg} <<<"
   end
 
   # self-explanatory
