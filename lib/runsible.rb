@@ -21,7 +21,13 @@ module Runsible
     retries: 0,
     vars: [],
   }
-  SSH_CNX_TIMEOUT = 10
+
+  # defaults
+  SSH_OPTIONS = {
+    forward_agent: true,
+    paranoid: false,
+    timeout: 10, # connection timeout, raises on expiry
+  }
 
   ### Utility stuff ###
 
@@ -144,10 +150,9 @@ module Runsible
 
   # initiate ssh connection, perform the runlist
   def self.ssh_runlist(settings, runlist, ssh_options, yaml)
-    ssh_options[:forward_agent] ||= true
+    ssh_options = SSH_OPTIONS.merge(ssh_options)
     ssh_options[:port] ||= settings.fetch('port')
     ssh_options[:send_env] ||= settings['vars'] if settings['vars']
-    ssh_options[:timeout] ||= SSH_CNX_TIMEOUT
     host, user = settings.fetch('host'), settings.fetch('user')
     Net::SSH.start(host, user, ssh_options) { |ssh|
       self.exec_runlist(ssh, runlist, settings, yaml)
