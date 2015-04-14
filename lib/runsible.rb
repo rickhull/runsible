@@ -174,7 +174,7 @@ module Runsible
         self.warn excp
         msg = "#{retries} retries exhausted; on_failure: #{on_failure}"
         self.warn msg
-        self.alert(settings['email'], "retries exhausted", excp)
+        self.alert("retries exhausted", excp, settings)
 
         case on_failure
         when 'continue'
