@@ -183,34 +183,32 @@ module Runsible
       (runlist || Array.new).each { |run|
         cmd = run.fetch('command')
         retries = run['retries'] || settings['retries']
-        count = 0
         on_failure = run['on_failure'] || 'exit'
 
         begin
-          count += 1
-          self.exec(ssh, channel, cmd, retries)
-        rescue CommandFailure, Net::SSH::Exception => e
-          excp = self.excp(e)
-          self.warn excp
-          self.alert("retries exhausted", excp, settings)
-          self.warn "#{retries} retries exhausted after #{excp}; " <<
-                    "on_failure: #{on_failure}"
+          if !self.exec(ssh, channel, cmd, retries)
+            self.alert("exec failure",
+                       { cmd: cmd,
+                         retries: retries,
+                         on_failure: on_failure }.inspect,
+                       settings)
 
-          case on_failure
-          when 'continue'
-            next
-          when 'exit'
-          else
-            if yaml[on_failure]
-              self.warn "found #{yaml[on_failure]} runlist"
-              # pass empty hash for yaml here to prevent infinite loops
-              self.exec_runlist(ssh, yaml[on_failure], settings, Hash.new)
-              self.warn "exiting failure after #{yaml[on_failure]}"
+            case on_failure
+            when 'continue'
+              next
+            when 'exit'
             else
-              self.warn "#{on_failure} unknown"
+              if yaml[on_failure]
+                self.warn "found #{yaml[on_failure]} runlist"
+                # pass empty hash for yaml here to prevent infinite loops
+                self.exec_runlist(ssh, yaml[on_failure], settings, Hash.new)
+                self.warn "exiting failure after #{yaml[on_failure]}"
+              else
+                self.warn "#{on_failure} unknown"
+              end
             end
+            self.die!("exiting after `#{cmd}` ultimately failed", settings)
           end
-          self.die!("exiting after `#{cmd}` ultimately failed", settings)
         end
       }
     }
@@ -220,45 +218,26 @@ module Runsible
   # retry several times, rescuing CommandFailure
   # raises on SSH channel exec failure and CommandFailure on final retry
   def self.exec(ssh, ch, cmd, retries)
-    self.banner_wrap(cmd) {
-      (retries + 1).times {
-        ch.exec(cmd) { |channel, success|
-          unless success
-            raise(Net::SSH::Exception, "SSH channel exec failure")
-          end
-
-          # handle STDOUT
-          channel.on_data do |ch,data|
-            $stdout.puts data
-          end
-
-          # handle STDERR
-          channel.on_extended_data do |ch,type,data|
-            $stderr.puts data
-          end
-
-          # handle exit status
-
-          channel.on_request("exit-status") do |ch,data|
-            exit_code = data.read_long
-            if exit_code != 0
-              raise(CommandFailure, "cmd exit: #{exit_code}")
-            end
-          end
+    self.warn self.begin_banner(cmd)
+    exit_code = 0
+    (retries + 1).times { |i|
+      self.warn "retry #{i}" if i > 0
+      ch.exec(cmd) { |channel, success|
+        raise(Net::SSH::EXception, "#{cmd} could not exec") unless success
+        channel.on_data { |ch, data| $stdout.puts data }
+        channel.on_extended_data { |ch, type, data| $stderr.puts data }
+        channel.on_request("exit-status") { |ch, data|
+          exit_code = data.read_long
         }
-      } # retry loop
-    }   # banner wrap
+      }
+      ssh.loop
+      break if exit_code == 0
+    } # retry loop
+    self.warn self.end_banner(cmd)
+    exit_code == 0
   end
 
-  ### Necessities ###
-
-  # display begin/end banners, yielding to the block in between
-  def self.banner_wrap(msg)
-    self.warn self.begin_banner(msg)
-    val = block_given? ? yield : true
-    self.warn self.end_banner(msg)
-    val
-  end
+  ### Yay, banners! ###
 
   # delimits the beginning of command output
   def self.begin_banner(msg)
