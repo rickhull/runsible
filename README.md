@@ -1,5 +1,8 @@
 [![Gem Version](https://badge.fury.io/rb/runsible.svg)](http://badge.fury.io/rb/runsible)
 
+Note: this is pre-alpha software and not feature complete.  See
+open [Issues](https://github.com/rickhull/runsible/issues).
+
 Runsible
 ========
 Runsible uses [SSH](http://en.wikipedia.org/wiki/Secure_Shell)
