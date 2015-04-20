@@ -172,7 +172,9 @@ module Runsible
     ssh_options[:send_env] ||= settings['vars'] if settings['vars']
     host, user = settings.fetch('host'), settings.fetch('user')
     Net::SSH.start(host, user, ssh_options) { |ssh|
-      self.exec_runlist(ssh, runlist, settings, yaml)
+      if runlist
+        self.exec_runlist(ssh, runlist, settings, yaml)
+      end
     }
   end
 
@@ -180,7 +182,7 @@ module Runsible
   # runlist can be nil
   def self.exec_runlist(ssh, runlist, settings, yaml = Hash.new)
     ssh.open_channel { |channel|
-      (runlist || Array.new).each { |run|
+      runlist.each { |run|
         cmd = run.fetch('command')
         retries = run['retries'] || settings['retries']
         on_failure = run['on_failure'] || 'exit'
@@ -212,7 +214,6 @@ module Runsible
         end
       }
     }
-    ssh.loop
   end
 
   # retry several times, rescuing CommandFailure
