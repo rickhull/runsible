@@ -17,3 +17,8 @@ settings:
   alerts:
     backend: disabled
   alerts:
+
+runlist:
+  - command: "true"
+  - command: "echo hi mom"
+  - command: "false"
