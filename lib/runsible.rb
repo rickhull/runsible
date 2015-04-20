@@ -179,80 +179,75 @@ module Runsible
   # execute runlist with failure handling, retries, alerting, etc.
   # runlist can be nil
   def self.exec_runlist(ssh, runlist, settings, yaml = Hash.new)
-    (runlist || Array.new).each { |run|
-      cmd = run.fetch('command')
-      retries = run['retries'] || settings['retries']
-      on_failure = run['on_failure'] || 'exit'
+    ssh.open_channel { |channel|
+      (runlist || Array.new).each { |run|
+        cmd = run.fetch('command')
+        retries = run['retries'] || settings['retries']
+        count = 0
+        on_failure = run['on_failure'] || 'exit'
 
-      begin
-        self.exec_retry(ssh, cmd, retries)
-      rescue CommandFailure, Net::SSH::Exception => e
-        excp = self.excp(e)
-        self.warn excp
-        msg = "#{retries} retries exhausted; on_failure: #{on_failure}"
-        self.warn msg
-        self.alert("retries exhausted", excp, settings)
+        begin
+          count += 1
+          self.exec(ssh, channel, cmd, retries)
+        rescue CommandFailure, Net::SSH::Exception => e
+          excp = self.excp(e)
+          self.warn excp
+          self.alert("retries exhausted", excp, settings)
+          self.warn "#{retries} retries exhausted after #{excp}; " <<
+                    "on_failure: #{on_failure}"
 
-        case on_failure
-        when 'continue'
-          next
-        when 'exit'
-        else
-          if yaml[on_failure]
-            self.warn "found #{yaml[on_failure]} runlist"
-            # pass empty hash for yaml here to prevent infinite loops
-            self.exec_runlist(ssh, yaml[on_failure], settings, Hash.new)
-            self.warn "exiting failure after #{yaml[on_failure]}"
+          case on_failure
+          when 'continue'
+            next
+          when 'exit'
           else
-            self.warn "#{on_failure} unknown"
+            if yaml[on_failure]
+              self.warn "found #{yaml[on_failure]} runlist"
+              # pass empty hash for yaml here to prevent infinite loops
+              self.exec_runlist(ssh, yaml[on_failure], settings, Hash.new)
+              self.warn "exiting failure after #{yaml[on_failure]}"
+            else
+              self.warn "#{on_failure} unknown"
+            end
           end
+          self.die!("exiting after `#{cmd}` ultimately failed", settings)
         end
-        self.die!("exiting after `#{cmd}` ultimately failed", settings)
-      end
+      }
     }
+    ssh.loop
   end
 
   # retry several times, rescuing CommandFailure
   # raises on SSH channel exec failure and CommandFailure on final retry
-  def self.exec_retry(ssh, cmd, retries)
+  def self.exec(ssh, ch, cmd, retries)
     self.banner_wrap(cmd) {
-      success = false
-      retries.times { |i|
-        begin
-          success = self.exec(ssh, cmd)
-          break
-        rescue CommandFailure => e
-          $stdout.puts "#{e}; retrying shortly..."
-          $stderr.puts e
-          sleep 2
-        end
-      }
-      # the final retry, may blow up
-      success or self.exec(ssh, cmd)
-    }
-  end
+      (retries + 1).times {
+        ch.exec(cmd) { |channel, success|
+          unless success
+            raise(Net::SSH::Exception, "SSH channel exec failure")
+          end
 
-  # prints remote STDOUT to local STDOUT, likewise for STDERR
-  # raises on SSH channel exec failure or nonzero exit status
-  def self.exec(ssh, cmd)
-    exit_code = nil
-    ssh.open_channel do |channel|
-      channel.exec(cmd) do |ch, success|
-        raise(Net::SSH::Exception, "SSH channel exec failure") unless success
-        channel.on_data do |ch,data|
-          $stdout.puts data
-        end
-        channel.on_extended_data do |ch,type,data|
-          $stderr.puts data
-        end
-        channel.on_request("exit-status") do |ch,data|
-          exit_code = data.read_long
-        end
-      end
-    end
-    ssh.loop # nothing actually executes until this call
-    raise(CommandFailure, "[exit #{exit_code}] #{cmd}") unless exit_code == 0
-    true
+          # handle STDOUT
+          channel.on_data do |ch,data|
+            $stdout.puts data
+          end
+
+          # handle STDERR
+          channel.on_extended_data do |ch,type,data|
+            $stderr.puts data
+          end
+
+          # handle exit status
+
+          channel.on_request("exit-status") do |ch,data|
+            exit_code = data.read_long
+            if exit_code != 0
+              raise(CommandFailure, "cmd exit: #{exit_code}")
+            end
+          end
+        }
+      } # retry loop
+    }   # banner wrap
   end
 
   ### Necessities ###
