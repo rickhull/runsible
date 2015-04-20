@@ -45,6 +45,16 @@ module Runsible
     hsh
   end
 
+  # opts has symbol keys, overrides settings (string keys)
+  # return a hash with string keys
+  def self.merge(opts, settings)
+    Runsible::SETTINGS.keys.each { |sym|
+      settings[sym.to_s] = opts[sym] if opts[sym]
+    }
+    settings['alerts'] = {} if opts.silent?
+    settings
+  end
+
   # read VERSION from filesystem
   def self.version
     File.read(File.join(__dir__, '..', 'VERSION'))
@@ -240,14 +250,12 @@ module Runsible
 
   ### Necessities ###
 
-  # opts has symbol keys, overrides settings (string keys)
-  # return a hash with string keys
-  def self.merge(opts, settings)
-    Runsible::SETTINGS.keys.each { |sym|
-      settings[sym.to_s] = opts[sym] if opts[sym]
-    }
-    settings['alerts'] = {} if opts.silent?
-    settings
+  # display begin/end banners, yielding to the block in between
+  def self.banner_wrap(msg)
+    self.warn self.begin_banner(msg)
+    val = block_given? ? yield : true
+    self.warn self.end_banner(msg)
+    val
   end
 
   # delimits the beginning of command output
@@ -260,16 +268,8 @@ module Runsible
     "<<< RUNSIBLE [#{self.timestamp}] #{msg} <<<"
   end
 
-  # self-explanatory
+  # Mar5 13:45:22
   def self.timestamp(t = Time.now)
     t.strftime("%b%d %H:%M:%S")
-  end
-
-  # display begin/end banners, yielding to the block in between
-  def self.banner_wrap(msg)
-    self.warn self.begin_banner(msg)
-    val = block_given? ? yield : true
-    self.warn self.end_banner(msg)
-    val
   end
 end
