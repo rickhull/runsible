@@ -62,21 +62,28 @@ module Runsible
 
   # send alert depending on settings
   def self.alert(topic, message, settings)
-    backend = settings['alerts'] && settings['alerts']['backend']
-    case backend
-    when 'disabled', nil, false
-      self.warn "DISABLED ALERT: [#{topic}] #{message}"
-      return
+    alerts = settings['alerts']
+    if !alerts or
+      !alerts['backend'] or
+      alerts['backend'] == 'disabled'
+      return self.warn "(DISABLED) ALERT: [#{topic}] #{message}"
+    end
+    case alerts['backend']
     when 'email'
-      Pony.mail(to: settings.fetch(:address),
-                from: 'runsible@spoon',
+      address = alerts['to'] || alerts['address']
+      unless address
+        self.warn alerts.inspect
+        return self.warn "(NO_ADDRESS) ALERT: [#{topic}] #{message}"
+      end
+      Pony.mail(address: address,
+                from: alerts['from'] || 'runsible@spoon',
                 subject: topic,
                 body: message)
     when 'kafka', 'slack'
       # TODO
-      raise Error, "unsupported backend: #{backend.inspect}"
+      raise Error, "unsupported backend: #{alerts['backend'].inspect}"
     else
-      raise Error, "unknown backend: #{backend.inspect}"
+      raise Error, "unknown backend: #{alerts['backend'].inspect}"
     end
   end
 
